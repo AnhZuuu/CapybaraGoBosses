@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boss Info</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      padding: 20px;
+    }
+    .table thead {
+      background-color: #337ab7;
+      color: white;
+    }
+    .filter-bar {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2 class="text-center">Danh sách Boss</h2>
+
+    <div class="row filter-bar">
+      <div class="col-sm-4">
+        <label>Chọn Category:</label>
+        <select id="categoryFilter" class="form-control">
+          <option value="">-- Tất cả --</option>
+        </select>
+      </div>
+      <div class="col-sm-4">
+        <label>Nhập số tầng:</label>
+        <div class="input-group">
+          <input type="number" id="floorInput" class="form-control" placeholder="Ví dụ: 72">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" onclick="findBossByFloor()">Tìm Boss</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <label>Boss tầng này:</label>
+        <input type="text" id="floorBossName" class="form-control" readonly>
+      </div>
+    </div>
+
+    <table class="table table-bordered table-hover" id="bossTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên</th>
+          <th>Biệt danh</th>
+          <th>Category</th>
+          <th>Hình ảnh</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <!-- Bootstrap JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <script>
+    const bosses = [
+      { id: 1, name: "Aisha", alias: "Elsa", category: "Đóng băng", img: "aisha_elsa.png" },
+      { id: 2, name: "Mắt quỷ cơ khí", alias: null, category: "Chưa có", img: "mat_quy_co_khi.png" },
+      { id: 3, name: "Khổng lồ một mắt", alias: null, category: "Phản kích", img: "khong_lo_mot_mat.png" },
+      { id: 4, name: "Gandalf", alias: null, category: "Khiên sét", img: "gandalf.png" },
+      { id: 5, name: "Pháp sư ngốc nghếch", alias: "2 bím tóc", category: "Khiên sét", img: "phap_su_ngoc_nghech.png" },
+      { id: 6, name: "Thiên thần sa ngã", alias: null, category: "Chưa có", img: "thien_than_sa_nga.png" },
+      { id: 7, name: "Chó 2 đầu", alias: null, category: "Chưa có", img: "cho_2_dau.png" },
+      { id: 8, name: "Hiệp sĩ thánh", alias: null, category: "Phản kích", img: "hiep_si_thanh.png" },
+      { id: 9, name: "Rồng độc", alias: null, category: "Chảy máu", img: "rong_doc.png" },
+      { id: 10, name: "Cá mập", alias: null, category: "Liên kích", img: "ca_map.png" },
+      { id: 11, name: "Naga tiên cá", alias: null, category: "Chưa có", img: "naga_tien_ca.png" },
+      { id: 12, name: "Frankenstein", alias: null, category: "Liên kích, chảy máu", img: "frankenstein.png" },
+      { id: 13, name: "Mắt laser", alias: null, category: "Phản kích", img: "mat_laser.png" },
+      { id: 14, name: "Rồng tê liệt", alias: null, category: "Khiên sét", img: "rong_te_liet.png" },
+      { id: 15, name: "Hiệp sĩ không đầu", alias: null, category: "Phản kích", img: "hiep_si_khong_dau.png" },
+      { id: 16, name: "Pharaon", alias: null, category: "Chảy máu", img: "pharaon.png" },
+      { id: 17, name: "Robot phản kích", alias: null, category: "Phản kích", img: "robot_phan_kich.png" },
+      { id: 18, name: "Medusa cung băng", alias: null, category: "Liên kích, đóng băng", img: "medusa_cung_bang.png" },
+      { id: 19, name: "Chú hề", alias: null, category: "Phi đao", img: "chu_he.png" },
+      { id: 20, name: "Orge xanh lá", alias: null, category: "Chí mạng", img: "orge_xanh_la.png" },
+      { id: 21, name: "Phượng Hoàng", alias: null, category: "Chảy máu", img: "phuong_hoang.png" },
+      { id: 22, name: "Người đá", alias: null, category: "Phản kích", img: "nguoi_da.png" },
+      { id: 23, name: "Gấu trúc", alias: null, category: "Đóng băng, giảm atk", img: "gau_truc.png" },
+      { id: 24, name: "Rồng ma xương", alias: null, category: "Chưa có", img: "rong_ma_xuong.png" }
+    ];
+
+    function renderTable(filterCategory = "") {
+      const tbody = $("#bossTable tbody");
+      tbody.empty();
+
+      const filtered = bosses.filter(b => !filterCategory || b.category.includes(filterCategory));
+      filtered.forEach(b => {
+        const alias = b.alias ? b.alias : "-";
+        const row = `<tr>
+          <td>${b.id}</td>
+          <td>${b.name}</td>
+          <td>${alias}</td>
+          <td>${b.category}</td>
+          <td><img src="img/${b.img}" width="60"></td>
+        </tr>`;
+        tbody.append(row);
+      });
+    }
+
+    function initCategoryFilter() {
+      const categories = [...new Set(bosses.flatMap(b => b.category.split(", ").map(c => c.trim())))];
+      categories.sort();
+      categories.forEach(cat => {
+        $("#categoryFilter").append(`<option value="${cat}">${cat}</option>`);
+      });
+    }
+
+    function findBossByFloor() {
+      const floor = parseInt($("#floorInput").val());
+      if (isNaN(floor) || floor <= 0) {
+        $("#floorBossName").val("Vui lòng nhập số tầng hợp lệ");
+        return;
+      }
+      const bossIndex = (floor - 1) % 24;
+      const boss = bosses[bossIndex];
+      $("#floorBossName").val(`${boss.name} (${boss.category})`);
+    }
+
+    $(document).ready(function () {
+      initCategoryFilter();
+      renderTable();
+
+      $("#categoryFilter").on("change", function () {
+        const selected = $(this).val();
+        renderTable(selected);
+      });
+    });
+  </script>
+</body>
+</html>
